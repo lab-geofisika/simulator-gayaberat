@@ -34,7 +34,7 @@ Catatan:
 |---|---|
 | `index.html` | Beranda untuk memilih alat |
 | `cg5.html` | Simulator **gravimeter otomatis** (adaptasi Scintrex CG-5 Autograv) |
-| `lacoste.html` | Simulator **LaCoste & Romberg Model G** |
+| `lacoste.html` | Simulator **gravimeter manual** (adaptasi LaCoste & Romberg Model G) |
 | `css/sim.css` | Tampilan bersama |
 | `js/core.js` | Model fisika: skenario, peta buatan sendiri, gayaberat normal, pasang surut Longman, ekspor Excel |
 | `js/field.js` | Kerangka bersama: jam, peta, tinggi alat, buku lapangan, panduan, kunci asisten |
@@ -160,4 +160,4 @@ Kunci juga bisa diunduh sebagai Excel.
 
 ## Catatan merek dagang
 
-Simulator gravimeter otomatis di sini adalah adaptasi dari Scintrex CG-5 Autograv untuk keperluan pendidikan. Simulator ini tidak berafiliasi dengan dan tidak didukung oleh Scintrex Ltd. Nama alat disebut hanya sebagai rujukan, dan merek dagang tetap milik pemiliknya masing-masing.
+Simulator gravimeter otomatis di sini adalah adaptasi dari Scintrex CG-5 Autograv, dan simulator gravimeter manual adalah adaptasi dari LaCoste & Romberg Model G, keduanya untuk keperluan pendidikan. Simulator ini tidak berafiliasi dengan dan tidak didukung oleh Scintrex Ltd. maupun LaCoste & Romberg. Nama alat disebut hanya sebagai rujukan, dan merek dagang tetap milik pemiliknya masing-masing.

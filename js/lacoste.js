@@ -111,10 +111,10 @@
     el.innerHTML = `
       <div class="lcr-wrap2">
         <div class="lcr-stage">
-          <svg viewBox="0 0 600 400" class="lid" id="lid" aria-label="Tutup atas gravimeter LaCoste & Romberg G">
+          <svg viewBox="0 0 600 400" class="lid" id="lid" aria-label="Tutup atas gravimeter manual">
             <rect x="4" y="4" width="592" height="392" rx="22" class="case"/>
             <rect x="22" y="22" width="556" height="356" rx="12" class="lidb"/>
-            <text x="300" y="46" text-anchor="middle" class="lid-brand">LaCOSTE &amp; ROMBERG · MODEL G · ${SN}</text>
+            <text x="300" y="46" text-anchor="middle" class="lid-brand">LAB GEOFISIKA UPer · ${SN}</text>
             ${knobSvg('ref', 70, 78, 'KAKI REF.')}
             ${knobSvg('cross', 70, 318, 'CROSS LEVEL ADJ.')}
             ${knobSvg('long', 528, 200, 'LONG LEVEL ADJ.')}
@@ -479,7 +479,7 @@
   }
 
   Field.init({
-    name: 'LaCoste & Romberg Model G',
+    name: 'Gravimeter Manual',
     storeKey: 'simgrav-lcr-v2',
     filePrefix: 'LCR',
     emptyHint: 'Setelah benang di garis baca, tulis bacaan di formulir atas.',
