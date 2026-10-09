@@ -375,7 +375,7 @@ svg.eyeview { width: 100%; max-width: 230px; height: auto; }
 @media (max-width: 760px) { .cards { grid-template-columns: 1fr; } .home-hero h1 { font-size: 21px; } }
 .card { background: #fff; border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; border: 1px solid #e3e8ee; }
 .card-art { height: 150px; display: grid; place-items: center; }
-.card-art.cg { background: linear-gradient(135deg, #27313c, #3e6e9a); } .card-art.lr { background: linear-gradient(135deg, #25292d, #6c747c); }
+.card-art.cg { background: linear-gradient(135deg, #0b2545, #2f5f8f); } .card-art.lr { background: linear-gradient(135deg, #25292d, #6c747c); }
 .card-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
 .card h2 { font-size: 18px; margin: 0; }
 .card ul { margin: 0; padding-left: 18px; color: #3e4a56; }
