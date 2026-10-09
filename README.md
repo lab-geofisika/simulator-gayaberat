@@ -33,7 +33,7 @@ Catatan:
 | File | Isi |
 |---|---|
 | `index.html` | Beranda untuk memilih alat |
-| `cg5.html` | Simulator **Scintrex CG-5 Autograv** |
+| `cg5.html` | Simulator **gravimeter otomatis** (adaptasi Scintrex CG-5 Autograv) |
 | `lacoste.html` | Simulator **LaCoste & Romberg Model G** |
 | `css/sim.css` | Tampilan bersama |
 | `js/core.js` | Model fisika: skenario, peta buatan sendiri, gayaberat normal, pasang surut Longman, ekspor Excel |
@@ -157,3 +157,7 @@ Kunci juga bisa diunduh sebagai Excel.
 - Format blok NSEWm/XYm pada dump disusun mengikuti pola LAT/LONG dari file asli.
 - Koordinat LAT/LONG di CG-5 diisi dalam derajat desimal.
 - Kolom per baris file `.SMP` asli tidak didokumentasikan di manual. Simulator menulis empat kolom sesuai urutan dan rumus di manual, dengan kepala berkomentar `/`.
+
+## Catatan merek dagang
+
+Simulator gravimeter otomatis di sini adalah adaptasi dari Scintrex CG-5 Autograv untuk keperluan pendidikan. Simulator ini tidak berafiliasi dengan dan tidak didukung oleh Scintrex Ltd. Nama alat disebut hanya sebagai rujukan, dan merek dagang tetap milik pemiliknya masing-masing.

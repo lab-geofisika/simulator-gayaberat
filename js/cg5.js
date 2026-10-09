@@ -152,8 +152,8 @@
     const kb = (k, main, top, sub, cls = '') => `<button class="ck ${cls}" data-k="${k}">${top ? `<i class="top">${top}</i>` : ''}<b>${main}</b>${sub ? `<i class="sub">${sub}</i>` : ''}</button>`;
     el.innerHTML = `
       <div class="cg5-wrap">
-        <div class="cg5x" tabindex="0" aria-label="Gravimeter Scintrex CG-5">
-          <div class="cgx-head"><span class="cgx-model">CG-5 AUTOGRAV<sup>TM</sup></span><span class="cgx-brand">SCINTREX</span></div>
+        <div class="cg5x" tabindex="0" aria-label="Gravimeter otomatis">
+          <div class="cgx-head"><span class="cgx-model">AUTO GRAVIMETER</span><span class="cgx-brand">LAB GEOFISIKA UPer</span></div>
           <div class="cgx-mid">
             <div class="cgx-left">
               ${kb('pwr', 'ON/OFF', '', '', 'pwr')}
@@ -178,7 +178,7 @@
           <svg viewBox="-110 -100 220 200" class="tripod-svg">
             <polygon points="${Object.values(FEET).map(f => `${84 * f.x},${-84 * f.y}`).join(' ')}" class="plate"/>
             <rect x="-34" y="-34" width="68" height="68" rx="6" class="body-top"/>
-            <text y="4" text-anchor="middle" class="plate-t">CG-5</text>
+            <text y="4" text-anchor="middle" class="plate-t">GRAV</text>
             <line x1="0" y1="0" x2="26" y2="0" class="axis"/><text x="29" y="4" class="axis-t">X</text>
             <line x1="0" y1="0" x2="0" y2="-26" class="axis"/><text x="-3" y="-29" class="axis-t">Y</text>
             ${Object.entries(FEET).map(([k, f]) => `<g transform="translate(${84 * f.x},${-84 * f.y})"><circle r="13" class="screw"/><text y="4" text-anchor="middle" class="screw-t">${k}</text></g>`).join('')}
@@ -751,7 +751,7 @@
   function lcd() {
     const s = st.scr;
     if (s === 'off') return '<div class="lcd-off2"></div>';
-    if (s === 'boot') return `<div class="boot2"><div class="b1">SCINTREX</div><div class="b2">CG-5 AUTOGRAV</div><div>Software Ver. ${SW}</div><div>Serial # ${SN}</div><div class="blink">Initializing...</div></div>`;
+    if (s === 'boot') return `<div class="boot2"><div class="b1">LAB GEOFISIKA</div><div class="b2">AUTO GRAVIMETER</div><div>Software Ver. ${SW}</div><div>Serial # ${SN}</div><div class="blink">Initializing...</div></div>`;
     let main = '', keys = ['', '', '', '', ''], sb = 'Sel:↑↓↵ Chg:Enter';
     const temp = `${(26 + Math.sin(S().now / 3.6e6) * 2).toFixed(0)} °C`;
     switch (s) {
@@ -1102,7 +1102,7 @@
   }
 
   Field.init({
-    name: 'Scintrex CG-5 Autograv',
+    name: 'Gravimeter Otomatis',
     storeKey: 'simgrav-cg5-v2',
     filePrefix: 'CG5',
     gps: true,
