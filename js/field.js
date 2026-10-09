@@ -126,7 +126,7 @@ const Field = (() => {
         : (isCustom()
           ? 'READ GPS memakai lokasi asli HP. Datangi titik sesuai daftar stasiun agar koordinatnya cocok.'
           : 'READ GPS memakai lokasi asli HP. Peta otomatis dipusatkan di lokasi Anda sekarang sebagai <b>Base Station</b>, lalu datangi titik S01–S15 sungguhan.')
-        + (gpsMode() === 'hp' && !window.isSecureContext ? ' <span class="bad">GPS HP butuh alamat https:// (mis. lab-geofisika.github.io) atau localhost.</span>' : '');
+        + (gpsMode() === 'hp' && !window.isSecureContext ? ' <span class="bad">GPS HP butuh alamat https:// (mis. lab-geofisika-uper.github.io) atau localhost.</span>' : '');
     };
     f.querySelectorAll('input[name="gps"]').forEach(x => { x.onchange = gpsNote; });
     f.querySelectorAll('input[name="map"]').forEach(x => { x.onchange = () => { box.hidden = !isCustom(); check(); gpsNote(); }; });
@@ -752,7 +752,7 @@ const Field = (() => {
   // Lokasi asli perangkat. Browser hanya memberi lokasi di https:// atau localhost.
   function devicePos(timeout = 20000) {
     return new Promise((ok, no) => {
-      if (!window.isSecureContext) return no(new Error('GPS HP butuh alamat https:// (mis. lab-geofisika.github.io) atau localhost.'));
+      if (!window.isSecureContext) return no(new Error('GPS HP butuh alamat https:// (mis. lab-geofisika-uper.github.io) atau localhost.'));
       if (!navigator.geolocation) return no(new Error('Perangkat ini tidak menyediakan GPS/lokasi.'));
       navigator.geolocation.getCurrentPosition(
         p => ok({ lat: p.coords.latitude, lon: p.coords.longitude, alt: p.coords.altitude, acc: p.coords.accuracy, altAcc: p.coords.altitudeAccuracy, utc: p.timestamp }),
