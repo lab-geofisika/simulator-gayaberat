@@ -166,31 +166,31 @@ table.book tr.hl td { background: #fff4d1; font-weight: 600; }
 .screw-btns .btn { font-size: 16px; padding: 2px 12px; }
 .cal-btn { grid-column: 1 / -1; justify-self: start; }
 
-/* ================= CG-5 (tampilan mengikuti foto konsol di manual, Fig. 1-10) ================= */
+/* ================= CG-5 (tata letak mengikuti konsol di manual Fig. 1-10; warna sengaja dibedakan dari alat asli) ================= */
 .cg5-wrap { max-width: 580px; margin: 0 auto; }
-.cg5x { background: linear-gradient(#2a9be8, #1677c9); border: 9px solid #c9cfd5; border-radius: 16px; padding: 10px 12px 14px; box-shadow: 0 8px 18px rgba(0, 0, 0, .22), inset 0 0 0 2px rgba(255, 255, 255, .25); outline: none; }
+.cg5x { background: linear-gradient(#eef1f4, #cfd6dd); border: 9px solid #0b2545; border-radius: 16px; padding: 10px 12px 14px; box-shadow: 0 8px 18px rgba(0, 0, 0, .22), inset 0 0 0 2px rgba(255, 255, 255, .25); outline: none; }
 .cgx-head { display: flex; align-items: baseline; justify-content: center; gap: 14px; padding: 2px 0 8px; }
-.cgx-model { color: #e3161f; font: 800 24px/1 "Arial Narrow", Arial, sans-serif; letter-spacing: .5px; text-shadow: 0 1px 0 rgba(255, 255, 255, .25); }
+.cgx-model { color: #0b2545; font: 800 24px/1 "Arial Narrow", Arial, sans-serif; letter-spacing: .5px; text-shadow: 0 1px 0 rgba(255, 255, 255, .6); }
 .cgx-model sup { font-size: 10px; }
-.cgx-brand { color: #e3161f; font: 800 12px/1 Arial, sans-serif; letter-spacing: 1px; }
+.cgx-brand { color: #0b2545; font: 800 12px/1 Arial, sans-serif; letter-spacing: 1px; }
 .cgx-mid { display: grid; grid-template-columns: 54px 1fr 54px; gap: 10px; align-items: stretch; }
 .cgx-left, .cgx-right { display: flex; flex-direction: column; justify-content: space-between; gap: 6px; }
-.ck { position: relative; border: 0; border-radius: 7px; background: linear-gradient(#f4f5f6, #d4d8dc); color: #1b2733; cursor: pointer; box-shadow: 0 2px 0 #0d4f87, 0 3px 4px rgba(0, 0, 0, .25); font: 700 17px/1 Arial, sans-serif; min-height: 40px; padding: 10px 2px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform .05s; }
-.ck:active { transform: translateY(2px); box-shadow: 0 0 0 #0d4f87; }
-.ck:focus-visible { outline: 2px solid #ffe14d; outline-offset: 2px; }
+.ck { position: relative; border: 0; border-radius: 7px; background: linear-gradient(#ffffff, #e2e7ec); color: #0b2545; cursor: pointer; box-shadow: 0 2px 0 #8a97a6, 0 3px 4px rgba(0, 0, 0, .25); font: 700 17px/1 Arial, sans-serif; min-height: 40px; padding: 10px 2px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform .05s; }
+.ck:active { transform: translateY(2px); box-shadow: 0 0 0 #8a97a6; }
+.ck:focus-visible { outline: 2px solid #e67e22; outline-offset: 2px; }
 .ck b { font-weight: 700; }
-.ck .top { position: absolute; top: 2px; left: 0; right: 0; font: 700 7.5px/1 Arial, sans-serif; color: #d0141c; font-style: normal; letter-spacing: .3px; }
+.ck .top { position: absolute; top: 2px; left: 0; right: 0; font: 700 7.5px/1 Arial, sans-serif; color: #1d5fa8; font-style: normal; letter-spacing: .3px; }
 .ck .sub { position: absolute; bottom: 2px; left: 0; right: 0; font: 600 7px/1 Arial, sans-serif; color: #5b6772; font-style: normal; }
-.ck.pwr { background: linear-gradient(#264d86, #1a365f); color: #fff; font-size: 11px; min-height: 34px; }
+.ck.pwr { background: linear-gradient(#e67e22, #c0601a); color: #fff; font-size: 11px; min-height: 34px; }
 .ck.dir { font-size: 18px; flex: 1; }
-.ck.fk { background: linear-gradient(#ffe46b, #f1c40f); font-size: 18px; flex: 1; }
-.ck.yel { background: linear-gradient(#ffe46b, #f1c40f); font-size: 13px; }
+.ck.fk { background: linear-gradient(#1d4f86, #0b2545); color: #fff; font-size: 18px; flex: 1; }
+.ck.yel { background: linear-gradient(#1d4f86, #0b2545); color: #fff; font-size: 13px; }
 .ck.yel b { line-height: 1.05; }
 .cgx-bottom { display: grid; grid-template-columns: 1fr 128px; gap: 12px; margin-top: 12px; align-items: center; }
 .cgx-num { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
 .cgx-num .wide { grid-column: span 2; }
 .cgx-arrows { position: relative; height: 122px; }
-.ck.arr { position: absolute; width: 40px; height: 40px; min-height: 0; border-radius: 50%; color: #1458b8; font-size: 17px; padding: 0; }
+.ck.arr { position: absolute; width: 40px; height: 40px; min-height: 0; border-radius: 50%; color: #0b2545; font-size: 17px; padding: 0; }
 .ck.arr.up { left: 44px; top: 0; } .ck.arr.down { left: 44px; bottom: 0; } .ck.arr.left { left: 0; top: 41px; } .ck.arr.right { right: 0; top: 41px; }
 
 /* layar LCD quarter-VGA */
