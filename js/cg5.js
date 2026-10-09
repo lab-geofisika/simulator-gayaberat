@@ -320,6 +320,25 @@
     if (st.snap) [st.survey, st.ag, st.inst, st.opt, st.dump, st.stn, st.note, st.clockOff] = JSON.parse(st.snap);
   }
   function flash(m) { st.msg = m; setTimeout(() => { if (st && st.msg === m) { st.msg = null; draw(); } }, 1800); }
+
+  /* GPS alat: Field.gpsFix() = posisi simulasi (stasiun + galat) atau lokasi asli HP */
+  let gpsBusy = false;
+  function readGps(apply, done) {
+    if (gpsBusy) return;
+    gpsBusy = true; st.msg = 'ACQUIRING GPS...'; draw();
+    Field.gpsFix().then(fx => {
+      gpsBusy = false; st.msg = null;
+      const alt = typeof fx.alt === 'number' ? fx.alt : null;
+      st.gpsLast = { lat: fx.lat, lon: fx.lon, alt, acc: fx.acc, altAcc: fx.altAcc || null, utc: fx.utc, sats: fx.sats, src: fx.src };
+      apply({ ...fx, alt });
+      if (done) flash(alt === null ? done + ' (NO ALT.)' : done);
+      after();
+    }).catch(e => { gpsBusy = false; st.msg = null; flash('NO GPS FIX'); Field.toast(e.message, 'err'); draw(); });
+  }
+  function putGps(o, fx) {
+    o.lat = Math.round(fx.lat * 1e6) / 1e6; o.lon = Math.round(fx.lon * 1e6) / 1e6;
+    if (fx.alt !== null && !(o === st.stn && st.opt.amb)) o.elev = Math.round(fx.alt * 10) / 10;
+  }
   function power() {
     if (st.scr === 'measuring') { Field.toast('Sedang mengukur — tekan F5 STOP dulu.', 'err'); return; }
     if (st.power) { st.power = false; st.scr = 'off'; st.overlay = null; }
@@ -429,14 +448,14 @@
         else if (k === 'up') st.sel = st.sel - cols >= 0 ? st.sel - cols : st.sel;
         else if (k === 'down') st.sel = Math.min(n - 1, st.sel + cols);
         else if (k === 'F5' || k === 'enter') go(ICONS[st.sel].k);
-        else if (k === 'F1') flash('GPS NOT CONNECTED');
+        else if (k === 'F1') readGps(() => go('gps'), null);
       }
     },
     survey: {
       cancel: 'setup',
       key(k) {
         if (k === 'F1') go('sysdes');
-        else if (k === 'F2') flash('GPS NOT CONNECTED');
+        else if (k === 'F2') readGps(fx => putGps(st.survey, fx), 'GPS POSITION READ');
         else if (k === 'F3') st.edit = true;
         else if (k === 'F4' || k === '0') { cancelChanges(); go('setup'); }
         else if (k === 'F5' || k === 'enter') go('setup');
@@ -476,7 +495,7 @@
     },
     clock: {
       key(k) {
-        if (k === 'F1') flash('GPS NOT CONNECTED');
+        if (k === 'F1') readGps(() => { st.clockOff = -Sim.WIB; }, 'RTC SET TO GPS (UTC)');
         else if (k === 'F3') st.edit = true;
         else if (k === 'F5' || k === '0') go('setup');
       }
@@ -518,11 +537,13 @@
         if (k === 'F1') go('options');
         else if (k === 'F2') { st.stn.line += st.opt.lsep || 0; flash(`NEXT LINE ${st.stn.line}`); }
         else if (k === 'F3') st.edit = true;
+        else if (k === 'F4' && st.survey.sys === 'LAT/LONG') readGps(fx => putGps(st.stn, fx), 'GPS POSITION READ');
         else if (k === 'F4') { st.stn.sta += st.opt.ssep || 0; flash(`NEXT STAT. ${st.stn.sta}`); }
         else if (k === 'F5') go(st.ag.terr ? 'tercor' : 'level');
         else if (k === '0') go('setup');
       }
     },
+    gps: { key(k) { if (k === 'F5' || k === '0' || k === 'enter') go('setup'); } },
     tercor: { key(k) { if (k === 'F5') go('level'); else if (k === '0') go('stn'); } },
     level: { key(k) { if (k === 'F5') startReading(); else if (k === '0') go('stn'); } },
     finished: {
@@ -781,9 +802,20 @@
       case 'note':
         main = title('NOTE', hm()) + rows(F_NOTE, st) + `<div class="note2">Catatan disimpan bersama record berikutnya.</div>`;
         keys = [st.edit ? `CAPS\nLOCK\n${st.caps ? 'on' : 'off'}` : '', st.edit ? 'CLEAR\nALL' : '', fe(), 'CANCEL', 'OK']; break;
+      case 'gps': {
+        const g = st.gpsLast;
+        main = title('GPS STATUS', temp) + (g ? `<table class="ft ro">
+          <tr><td>Status:</td><td>${g.src === 'hp' ? 'FIX (HP)' : '3D FIX'}</td></tr>
+          ${g.sats ? `<tr><td>Satellites:</td><td>${g.sats}</td></tr>` : ''}
+          <tr><td>Latitude:</td><td>${fmtCoord(g.lat, 'NS')}</td></tr><tr><td>Longitude:</td><td>${fmtCoord(g.lon, 'EW')}</td></tr>
+          <tr><td>Altitude:</td><td>${g.alt === null ? 'N/A' : g.alt.toFixed(1) + ' m'}</td></tr>
+          <tr><td>Accuracy:</td><td>±${g.acc.toFixed(1)} m${g.altAcc ? ` / ±${g.altAcc.toFixed(1)} m` : ''}</td></tr>
+          <tr><td>UTC:</td><td>${new Date(g.utc).toISOString().slice(11, 19)}</td></tr></table>` : '<div class="note2">No GPS data</div>');
+        keys = ['', '', '', '', 'OK']; break;
+      }
       case 'stn':
         main = title('STATION DESIGNATION', hm()) + rows(fStn(), st.stn) + (st.note ? `<div class="note2">Note: ${esc(st.note)}</div>` : '');
-        keys = ['OPTION', 'NEXT\nLINE', fe(), 'NEXT\nSTAT.', st.ag.terr ? 'TERCOR' : 'LEVEL']; break;
+        keys = ['OPTION', 'NEXT\nLINE', fe(), st.survey.sys === 'LAT/LONG' ? 'READ\nGPS' : 'NEXT\nSTAT.', st.ag.terr ? 'TERCOR' : 'LEVEL']; break;
       case 'tercor':
         main = title('NEAR TERRAIN CORRECTIONS', hm()) + `<div class="note2">Koreksi medan (Hammer) tidak disimulasikan.<br>Matikan "Terrain Corr." di AUTOGRAV bila tidak dipakai.</div>`;
         keys = ['', '', '', '', 'LEVEL']; break;
@@ -902,15 +934,16 @@
 
   const HELP = {
     setup: 'SETUP MENU: pilih ikon dengan panah, tekan F5 (OK) atau ENTER. MEASURE/CLR membuka STATION DESIGNATION. Di mode FUNCT: 4 = SETUP, 5 = RECALL, 6 = DISPLAY, 7 = INFO, 8 = NOTE, 0 = ESC, • = HELP.',
-    survey: 'SURVEY HEADER: tekan F3 untuk mode EDIT. ↑↓ pindah isian. Angka diketik lalu ditutup dengan tombol arah, mis. 6.235 lalu S untuk lintang selatan. Teks: tekan tombol huruf berulang (2 → 2, d, e, f), ▶ untuk huruf berikutnya. F2 = CLEAR ALL, MEASURE/CLR = hapus satu karakter. GMT Diff = −7 untuk WIB (titik di timur Greenwich bernilai negatif). F1 PARAMS memilih sistem penamaan stasiun. F5 OK menyimpan.',
+    survey: 'SURVEY HEADER: tekan F3 untuk mode EDIT. ↑↓ pindah isian. Angka diketik lalu ditutup dengan tombol arah, mis. 6.235 lalu S untuk lintang selatan. Teks: tekan tombol huruf berulang (2 → 2, d, e, f), ▶ untuk huruf berikutnya. F2 = CLEAR ALL, MEASURE/CLR = hapus satu karakter. GMT Diff = −7 untuk WIB (titik di timur Greenwich bernilai negatif). F1 PARAMS memilih sistem penamaan stasiun. F2 READ GPS mengisi Latitude, Longitude, dan Elevation dari GPS. F5 OK menyimpan.',
     sysdes: 'Pilih sistem penamaan stasiun dengan ←→ di mode EDIT (F3). LAT/LONG: titik dinamai dengan koordinat GPS, dan koordinat itu yang dipakai untuk koreksi pasang surut. NSEWm/XYm: Line dan Station berupa angka.',
     autograv: 'AUTOGRAV SETUP: F3 EDIT, ←→ mengubah YES/NO. Tide Correct. (Longman), Cont.Tilt.Corr, Auto Reject (>4σ, atau 6σ bila Seismic Filter), Save Raw Data menyimpan sampel 6 Hz. F1 NEXT PAGE = parameter alat (jangan diubah). F5 RECORD menyimpan.',
     autograv2: 'Parameter alat dari label kalibrasi pabrik. Manual: JANGAN diubah. Bila TiltX/Y.Sens = 0, leveling tidak berfungsi.',
     options: 'Read Time (detik, 1–256) dan #Of Cycles (pengulangan otomatis; setiap siklus langsung tersimpan). Auto station inc. menaikkan nomor stasiun setelah RECORD. Measurement: NUMERIC atau GRAPHIC. F1 FINAL KEY on/off.',
-    clock: 'Jam alat. F3 EDIT untuk mengubah manual (angka, • sebagai pemisah). Bila jam alat diatur ke UTC, GMT Diff harus 0. Bila WIB, GMT Diff −7.',
+    clock: 'Jam alat. F3 EDIT untuk mengubah manual (angka, • sebagai pemisah). F1 SETRTC WITH GPS mengatur jam ke UTC dari GPS, jadi GMT Diff di Survey harus 0. Bila jam diatur ke WIB, GMT Diff −7.',
+    gps: 'GPS STATUS: posisi dari GPS alat (simulasi) atau GPS HP, sesuai pilihan saat mulai. Elevasi GPS kurang teliti (±5 m atau lebih); untuk reduksi Bouguer pakai elevasi hasil pengukuran topografi bila ada.',
     dump: 'F1 START DUMP / F2 DUMP DATA: unduh data final (.TXT, format sama dengan alat). F4 DUMP RAW: unduh sampel 6 Hz (.SMP), hanya untuk bacaan yang diambil dengan Save Raw Data = YES.',
     memory: 'F1 CLEAR MEMORY menghapus semua data (DUMP dulu!). Konfirmasi dengan 9 (Y) atau 5 (N).',
-    stn: 'STATION DESIGNATION: F3 EDIT, isi Longit./Latit. (sistem LAT/LONG) atau Station/Line, lalu Elevation dan Line ID. Setiap pergantian Line ID membuat blok "Line" baru di file dump. F2 NEXT LINE dan F4 NEXT STAT. menambah sesuai separation di OPTIONS. F5 LEVEL (atau MEASURE).',
+    stn: 'STATION DESIGNATION: F3 EDIT, isi Longit./Latit. (sistem LAT/LONG) atau Station/Line, lalu Elevation dan Line ID. Setiap pergantian Line ID membuat blok "Line" baru di file dump. F2 NEXT LINE dan F4 NEXT STAT. menambah sesuai separation di OPTIONS; pada sistem LAT/LONG, F4 READ GPS mengisi Longit., Latit., dan Elevation dari GPS. F5 LEVEL (atau MEASURE).',
     level: 'LEVELING: putar sekrup kaki F (sumbu Y) lalu L dan R (sumbu X) mengikuti arah ikon di pojok layar sampai garis silang masuk lingkaran kecil (±10″) dan muncul ikon senyum. Ideal X dan Y antara −2 dan 2. Lalu F5 READ GRAV.',
     measuring: 'Sedang membaca. Menjauh dari alat dan jangan menimbulkan getaran. F5 STOP menghentikan pembacaan.',
     finished: 'Pembacaan selesai. Mode GRAPHIC: F3 memilih grafik, F4 REVIEW GRAPH. F5 FINAL DATA untuk melihat hasil.',
@@ -1072,6 +1105,7 @@
     name: 'Scintrex CG-5 Autograv',
     storeKey: 'simgrav-cg5-v2',
     filePrefix: 'CG5',
+    gps: true,
     emptyHint: 'Ukur lalu RECORD; data masuk otomatis dari memori alat.',
     newState, mount, guide, measured,
     refresh: draw,

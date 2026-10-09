@@ -118,7 +118,8 @@ const Sim = (() => {
   };
 
   // custom: [{id, lat, lon, elev?}] — stasiun berlabel BS (atau baris pertama) menjadi base
-  function buildScenario(code, custom) {
+  // center: {lat, lon} opsional — peta otomatis digeser agar BS berada di titik ini (lokasi GPS HP)
+  function buildScenario(code, custom, center) {
     const CODE = (code || 'DEMO').trim().toUpperCase();
     const R = rng(hashStr('grav|' + CODE));
     const isCustom = Array.isArray(custom) && custom.length >= 2;
@@ -148,7 +149,13 @@ const Sim = (() => {
     } else {
       const ue = Math.sin(az * DEG), un = Math.cos(az * DEG), ve = Math.cos(az * DEG), vn = -Math.sin(az * DEG);
       const at = (id, x, y) => { const E = x * ue + y * ve, N = x * un + y * vn; return { id, x, y, E, N, lat: lat0 + N / 110574, lon: lon0 + E / (111320 * Math.cos(lat0 * DEG)) }; };
-      pts = [at('BS', -130 + R.range(-20, 20), -90 + R.range(-15, 15))];
+      const bx = -130 + R.range(-20, 20), by = -90 + R.range(-15, 15);
+      pts = [at('BS', bx, by)];
+      if (center) {                     // GPS HP: base station tepat di lokasi perangkat
+        lat0 = center.lat - pts[0].N / 110574;
+        lon0 = center.lon - pts[0].E / (111320 * Math.cos(lat0 * DEG));
+        pts = [at('BS', bx, by)];
+      }
       for (let k = 1; k <= 15; k++) pts.push(at('S' + String(k).padStart(2, '0'), (k - 1) * 100 + R.range(-6, 6), R.range(-12, 12)));
     }
     const line = pts.slice(1);
@@ -158,7 +165,10 @@ const Sim = (() => {
     // topografi halus (dipakai bila elevasi tidak diberikan)
     const h0 = R.range(18, 35), A1 = R.range(5, 12), L1 = R.range(800, 1600) * s, f1 = R.range(0, 6.28);
     const A2 = R.range(1, 3), L2 = R.range(200, 400) * s, f2 = R.range(0, 6.28);
-    const topo = (x, y) => h0 + A1 * Math.sin(2 * Math.PI * x / L1 + f1) + A2 * Math.sin(2 * Math.PI * x / L2 + f2) + 0.01 * y;
+    const topo0 = (x, y) => h0 + A1 * Math.sin(2 * Math.PI * x / L1 + f1) + A2 * Math.sin(2 * Math.PI * x / L2 + f2) + 0.01 * y;
+    // GPS HP: topografi digeser agar elevasi BS = ketinggian GPS perangkat (relief tetap buatan)
+    const zOff = !isCustom && center && typeof center.alt === 'number' ? center.alt - topo0(pts[0].x, pts[0].y) : 0;
+    const topo = (x, y) => topo0(x, y) + zOff;
 
     // benda penyebab anomali; ukuran diskalakan dengan panjang lintasan, amplitudo dijaga serupa
     const type = R.pick(Object.keys(BODY_TYPES));

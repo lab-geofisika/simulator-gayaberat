@@ -54,6 +54,13 @@ Catatan:
 4. Pilih **peta pengukuran**:
    - **Otomatis**: Base Station + S01–S15, jarak 100 m.
    - **Buat sendiri**: tempel daftar stasiun dari Excel (blok kolom, Ctrl+C, lalu Ctrl+V di kotak) atau unggah CSV. Kolom: `ID, Lintang, Bujur, Elevasi`. Elevasi boleh kosong; nilainya diisi dari stasiun terdekat. Stasiun ber-ID `BS` menjadi base; bila tidak ada, baris pertama. Desimal koma juga terbaca. Tombol **Unduh template** memberi contoh berkas Excel. Maksimal 60 stasiun.
+5. Khusus CG-5, pilih **GPS alat (READ GPS)**:
+   - **Simulasi** (bawaan): READ GPS memberi koordinat stasiun di peta ditambah galat GPS navigasi (±2,5 m horizontal, ±4,5 m vertikal).
+   - **GPS HP/laptop**: READ GPS memakai lokasi asli perangkat. Pada peta otomatis, Base Station ditaruh tepat di lokasi perangkat saat mulai dan elevasinya disamakan dengan ketinggian GPS; S01–S15 tersebar 100 m dari situ. Posisi perangkat tampil sebagai titik oranye di peta. Perlu alamat `https://` (mis. GitHub Pages) atau `localhost`, dan izin lokasi di browser.
+
+Tombol GPS di konsol CG-5: **SETUP F1 CHECK GPS** (status, satelit, akurasi), **SURVEY HEADER F2 READ GPS** (isi Latitude, Longitude, Elevation), **STATION DESIGNATION F4 READ GPS** pada sistem LAT/LONG, dan **CLOCK F1 SETRTC WITH GPS** (jam alat jadi UTC, sehingga GMT Diff harus 0).
+
+Catatan mode GPS HP: koordinat dan ketinggian berasal dari tempat Anda berdiri, tetapi nilai gayaberat tetap dihitung dari stasiun simulasi yang dipilih di peta, dengan relief buatan. Pindah stasiun tetap dengan klik peta; datangi titiknya sungguhan agar koordinat GPS cocok.
 
 Di lapangan, klik titik di peta untuk berpindah. Jarak sampai 800 m ditempuh dengan berjalan; lebih jauh dari itu dengan kendaraan. Di setiap titik, tekan **Ukur dengan meteran** untuk mencatat tinggi alat (SOP langkah 2). Tinggi alat memengaruhi bacaan dan ikut tercatat di buku lapangan. Akhiri survei dengan kembali ke **BS** (looping).
 

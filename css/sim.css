@@ -83,6 +83,8 @@ a { color: var(--accent-ink); }
 .map-legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 11px; color: var(--muted); margin: 6px 0 10px; }
 .lg { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #6b7785; background: #fff; margin-right: 4px; vertical-align: -1px; }
 .lg.base { border-radius: 2px; } .lg.vis { background: #cfe3f7; border-color: #2f6fae; } .lg.done { background: #2fb36b; border-color: #1b7a46; }
+.lg.me { background: #e8590c; border-color: #fff; box-shadow: 0 0 0 1.5px #e8590c; }
+.map-me .acc { fill: rgba(232, 89, 12, .12); stroke: rgba(232, 89, 12, .45); stroke-width: 1; } .map-me .dot { fill: #e8590c; stroke: #fff; }
 
 .st-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 .st-id { font-size: 22px; font-weight: 700; color: var(--navy); }

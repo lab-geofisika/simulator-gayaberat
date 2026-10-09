@@ -31,7 +31,7 @@ const Field = (() => {
       S = saved;
       Sim.setTZ(S.tz ?? 7);
       if (S.realtime) S.now = Date.now();
-      sc = Sim.buildScenario(S.code, S.custom);
+      sc = Sim.buildScenario(S.code, S.custom, S.center);
       boot();
     } else {
       showSetup();
@@ -79,6 +79,12 @@ const Field = (() => {
             <div id="custPrev" class="small"></div>
           </div>
         </fieldset>
+        ${I.gps ? `<fieldset class="span2 lintasan">
+          <legend>GPS alat (READ GPS)</legend>
+          <label class="rad"><input type="radio" name="gps" value="sim" checked> Simulasi: koordinat stasiun di peta + galat GPS ±3 m</label>
+          <label class="rad"><input type="radio" name="gps" value="hp"> GPS HP/laptop: lokasi asli perangkat</label>
+          <p class="small muted" id="gpsNote">READ GPS mengisi lintang, bujur, dan elevasi dari posisi stasiun simulasi.</p>
+        </fieldset>` : ''}
         <div class="span2 actions"><button class="btn primary" type="submit">Mulai di Base Station</button></div>
       </form>`, { closable: false, wide: true });
     const f = $('#setupForm'), box = $('#customBox'), prev = $('#custPrev');
@@ -111,7 +117,19 @@ const Field = (() => {
         : '<span class="bad">Minimal 2 stasiun.</span>') + (r.errs.length ? `<br><span class="bad">${r.errs.slice(0, 4).map(esc).join('<br>')}</span>` : '');
       return r;
     };
-    f.querySelectorAll('input[name="map"]').forEach(x => { x.onchange = () => { box.hidden = !isCustom(); check(); }; });
+    const gpsMode = () => (f.querySelector('input[name="gps"]:checked') || { value: 'sim' }).value;
+    const gpsNote = () => {
+      const el = $('#gpsNote');
+      if (!el) return;
+      el.innerHTML = gpsMode() === 'sim'
+        ? 'READ GPS mengisi lintang, bujur, dan elevasi dari posisi stasiun simulasi.'
+        : (isCustom()
+          ? 'READ GPS memakai lokasi asli HP. Datangi titik sesuai daftar stasiun agar koordinatnya cocok.'
+          : 'READ GPS memakai lokasi asli HP. Peta otomatis dipusatkan di lokasi Anda sekarang sebagai <b>Base Station</b>, lalu datangi titik S01–S15 sungguhan.')
+        + (gpsMode() === 'hp' && !window.isSecureContext ? ' <span class="bad">GPS HP butuh alamat https:// (mis. lab-geofisika.github.io) atau localhost.</span>' : '');
+    };
+    f.querySelectorAll('input[name="gps"]').forEach(x => { x.onchange = gpsNote; });
+    f.querySelectorAll('input[name="map"]').forEach(x => { x.onchange = () => { box.hidden = !isCustom(); check(); gpsNote(); }; });
     f.stations.addEventListener('input', check);
     $('#csvFile').onchange = e => {
       const file = e.target.files[0];
@@ -134,17 +152,25 @@ const Field = (() => {
         custom = r.stations;
       }
       if (!isReal() && (!fd.get('date') || !fd.get('time'))) { toast('Isi tanggal dan jam mulai.', 'err'); return; }
-      closeModal();
-      newSession({ code: fd.get('code'), operator: fd.get('operator') || '', date: fd.get('date'), time: fd.get('time'), mode: fd.get('mode'), custom, realtime: isReal() });
+      const o = { code: fd.get('code'), operator: fd.get('operator') || '', date: fd.get('date'), time: fd.get('time'), mode: fd.get('mode'), custom, realtime: isReal(), gps: I.gps ? gpsMode() : null };
+      if (o.gps !== 'hp') { closeModal(); newSession(o); return; }
+      const btn = f.querySelector('button[type="submit"]'), txt = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Mencari lokasi GPS…';
+      devicePos().then(c => {
+        if (!custom) o.center = { lat: c.lat, lon: c.lon, alt: typeof c.alt === 'number' ? Math.round(c.alt * 10) / 10 : null };
+        closeModal(); newSession(o);
+        toast(`GPS HP aktif (akurasi ±${Math.round(c.acc)} m).`, 'ok');
+      }).catch(e => { btn.disabled = false; btn.textContent = txt; toast(e.message, 'err'); });
     });
   }
 
   function newSession(o) {
     const tz = o.realtime ? Sim.deviceTZ() : 7;
     Sim.setTZ(tz);
-    sc = Sim.buildScenario(o.code, o.custom);
+    sc = Sim.buildScenario(o.code, o.custom, o.center);
     S = {
       v: 1, code: sc.code, operator: o.operator.trim(), mode: o.mode, custom: o.custom || null,
+      gps: o.gps || 'sim', center: o.center || null,
       realtime: !!o.realtime, tz,
       startUtc: o.realtime ? Math.floor(Date.now() / 1000) * 1000 : Sim.wibToUtc(o.date, o.time), at: 'BS', visited: { BS: 1 },
       records: [], log: [], walked: 0, hInst: newHeight(), hMeasured: null
@@ -157,6 +183,7 @@ const Field = (() => {
 
   let booted = false;
   function boot() {
+    watchMe();
     renderHeader();
     I.mount($('#inst'));
     renderMap();
@@ -194,6 +221,7 @@ const Field = (() => {
       <div class="top-actions">
         <span class="chip" title="Kode skenario">${esc(S.code)}</span>
         ${S.realtime ? '<span class="chip" title="Jam mengikuti perangkat">Waktu nyata</span>' : ''}
+        ${S.gps === 'hp' ? '<span class="chip" title="READ GPS memakai lokasi asli perangkat">GPS HP</span>' : ''}
         <span class="chip ${S.mode === 'ujian' ? 'warn' : 'ok'}">${S.mode === 'ujian' ? 'Mode ujian' : 'Mode latihan'}</span>
         <button class="btn ghost" id="btnKey" title="Kunci jawaban untuk asisten (perlu PIN)">Kunci asisten</button>
         <button class="btn ghost" id="btnReset" title="Hapus sesi dan mulai lagi">Mulai ulang</button>
@@ -268,6 +296,7 @@ const Field = (() => {
             ${lbl ? `<text x="${cx}" y="${cy - 12 * k}" font-size="${11 * k}" text-anchor="middle">${s.id}</text>` : ''}
           </g>`;
         }).join('')}
+        ${meMarker(X, Y, k)}
         <g transform="translate(${w - 30 * k},${34 * k})" class="map-north">
           <path d="M0 ${-18 * k} L${6 * k} ${4 * k} L0 0 L${-6 * k} ${4 * k} Z"/>
           <text y="${16 * k}" font-size="${10 * k}" text-anchor="middle">U</text>
@@ -279,7 +308,7 @@ const Field = (() => {
           <text x="${sb / 2}" y="${-6 * k}" font-size="${10 * k}" text-anchor="middle">${sbl}</text>
         </g>
       </svg>
-      <div class="map-legend"><span><i class="lg base"></i>Base</span><span><i class="lg"></i>Belum</span><span><i class="lg vis"></i>Dikunjungi</span><span><i class="lg done"></i>Sudah diukur</span></div>`;
+      <div class="map-legend"><span><i class="lg base"></i>Base</span><span><i class="lg"></i>Belum</span><span><i class="lg vis"></i>Dikunjungi</span><span><i class="lg done"></i>Sudah diukur</span>${S.gps === 'hp' ? '<span><i class="lg me"></i>Posisi HP</span>' : ''}</div>`;
     $('#map').querySelectorAll('.map-st').forEach(g => {
       g.addEventListener('click', () => moveTo(g.dataset.id));
       g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); moveTo(g.dataset.id); } });
@@ -719,6 +748,48 @@ const Field = (() => {
     setTimeout(() => { if (g.on && g.ok === null) { g.ok = false; renderVib(); } }, 2000);
   }
 
+  /* ---------------- GPS (READ GPS alat) ---------------- */
+  // Lokasi asli perangkat. Browser hanya memberi lokasi di https:// atau localhost.
+  function devicePos(timeout = 20000) {
+    return new Promise((ok, no) => {
+      if (!window.isSecureContext) return no(new Error('GPS HP butuh alamat https:// (mis. lab-geofisika.github.io) atau localhost.'));
+      if (!navigator.geolocation) return no(new Error('Perangkat ini tidak menyediakan GPS/lokasi.'));
+      navigator.geolocation.getCurrentPosition(
+        p => ok({ lat: p.coords.latitude, lon: p.coords.longitude, alt: p.coords.altitude, acc: p.coords.accuracy, altAcc: p.coords.altitudeAccuracy, utc: p.timestamp }),
+        e => no(new Error(e.code === 1 ? 'Izin lokasi ditolak. Izinkan akses lokasi untuk situs ini di pengaturan browser.'
+          : e.code === 3 ? 'GPS belum mendapat posisi (timeout). Coba di tempat terbuka, lalu ulangi.' : 'Lokasi tidak tersedia. Pastikan GPS/Location HP menyala.')),
+        { enableHighAccuracy: true, timeout, maximumAge: 0 });
+    });
+  }
+  const gauss = () => Math.sqrt(-2 * Math.log(Math.random() || 1e-9)) * Math.cos(2 * Math.PI * Math.random());
+  // Satu kali baca GPS untuk alat: simulasi (stasiun saat ini + galat) atau lokasi HP
+  function gpsFix() {
+    if (S.gps === 'hp') return devicePos().then(c => { me.fix = c; renderMap(); return { ...c, src: 'hp', sats: null }; });
+    const s = station(), sh = 2.5, sv = 4.5;  // galat GPS navigasi: horizontal ±2,5 m, vertikal ±4,5 m (1σ)
+    const fix = {
+      lat: s.lat + gauss() * sh / 110574, lon: s.lon + gauss() * sh / (111320 * Math.cos(s.lat * Sim.DEG)),
+      alt: s.elev + gauss() * sv, acc: sh * 1.2 + Math.random() * 1.5, altAcc: sv * 1.5, utc: S.now,
+      src: 'sim', sats: 6 + Math.floor(Math.random() * 6)
+    };
+    return new Promise(ok => setTimeout(() => ok(fix), 900 + Math.random() * 900));
+  }
+  // posisi HP di peta (mode GPS HP), diperbarui terus selama halaman terbuka
+  const me = { fix: null, watch: null, last: -Infinity };
+  function watchMe() {
+    if (S.gps !== 'hp' || me.watch !== null || !window.isSecureContext || !navigator.geolocation) return;
+    me.watch = navigator.geolocation.watchPosition(p => {
+      me.fix = { lat: p.coords.latitude, lon: p.coords.longitude, alt: p.coords.altitude, acc: p.coords.accuracy };
+      if (performance.now() - me.last > 2000) { me.last = performance.now(); renderMap(); }
+    }, () => {}, { enableHighAccuracy: true, maximumAge: 5000 });
+  }
+  function meMarker(X, Y, k) {
+    if (S.gps !== 'hp' || !me.fix) return '';
+    const E = (me.fix.lon - sc.lon0) * 111320 * Math.cos(sc.lat0 * Sim.DEG), N = (me.fix.lat - sc.lat0) * 110574;
+    const cx = X(E), cy = Y(N);
+    return `<g class="map-me" pointer-events="none"><circle cx="${cx}" cy="${cy}" r="${Math.max(8 * k, me.fix.acc)}" class="acc"/>
+      <circle cx="${cx}" cy="${cy}" r="${6 * k}" class="dot" stroke-width="${2 * k}"/></g>`;
+  }
+
   function refresh() {
     renderGuide();
     I.refresh && I.refresh();
@@ -728,6 +799,7 @@ const Field = (() => {
     init, advance, addRecord, logIssue, toast, ask, modal, closeModal, save, refresh,
     renderMap, renderBookTable, station, esc,
     hInst: () => (S && S.hInst) || 0.25, hInstMeasured: () => (S ? S.hMeasured ?? null : null),
+    gpsFix, gpsMode: () => (S && S.gps) || 'sim',
     setBusy: v => { busy = v; },
     realtime: () => !!(S && S.realtime),
     onVibration: fn => { VIB.fns = [fn]; },
